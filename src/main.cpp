@@ -88,14 +88,11 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-  TimBase tim3(TIM3, &htim3);
-
   DigitalOut led1(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
   DigitalIn button1(SW1_GPIO_Port, SW1_Pin);
-
-  uint32_t tick_us_previous = 0;
-  uint32_t tick_us_now = 0;
-  uint16_t cnt = 0;
+  
+  TimIT tim3(TIM3, &htim3);
+  uint64_t tick_ms_previous = 0;
 
   tim3.start();
   /* USER CODE END 2 */
@@ -107,23 +104,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    tick_us_now = tim3.read();
-
-    if ((tick_us_now - tick_us_previous) >= 1000)
+    if (tim3.delay_ms(tick_ms_previous, 1000)) // 1s delay
     {
-      if (cnt == 1000) // blink every second 
-      {
-        led1.toggle();
-        cnt = 0;
-      }
-      
-      cnt++;
-      tick_us_previous = tick_us_now;
+      tick_ms_previous = tim3.read();
+      led1.toggle();
     }
 
-    if (button1.read() == GPIO_PIN_RESET)
+    if (button1.read() == GPIO_PIN_RESET) // Button is pressed
     {
-      led1.write(button1.read());
+      led1.write(GPIO_PIN_RESET);
     }
 
   }
