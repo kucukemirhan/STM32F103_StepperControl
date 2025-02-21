@@ -81,17 +81,26 @@ EncoderIT::~EncoderIT(void)
     ISR_List.remove(this);
 }
 
-HAL_StatusTypeDef EncoderIT::start(void) 
+HAL_StatusTypeDef EncoderIT::start(void)
 {
-    return HAL_TIM_Encoder_Start_IT(_htim, _Channel);
+    HAL_StatusTypeDef status1 = HAL_TIM_Encoder_Start(_htim, _Channel);
+
+    HAL_StatusTypeDef status2 = HAL_TIM_Base_Start_IT(_htim);
+
+    if (status1 == HAL_OK && status2 == HAL_OK) {
+        return HAL_OK;
+    } else {
+        return HAL_ERROR;
+    }
 }
+
 
 HAL_StatusTypeDef EncoderIT::stop(void) 
 {
     return HAL_TIM_Encoder_Stop_IT(_htim, _Channel);
 }
 
-uint32_t EncoderIT::read(void) 
+int32_t EncoderIT::read(void) 
 {
     // Read the raw 16-bit hardware counter
     uint16_t rawCount = __HAL_TIM_GET_COUNTER(_htim);

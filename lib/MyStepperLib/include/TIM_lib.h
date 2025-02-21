@@ -1,5 +1,5 @@
-#ifndef INC_TIM_HAL_H_
-#define INC_TIM_HAL_H_
+#ifndef INC_TIM_LIB_H_
+#define INC_TIM_LIB_H_
 
 #include "tim.h"
 #include "ISR_obj.h"
@@ -47,5 +47,23 @@ private:
     void tick(void);
 };
 
+class TimPWM : public TimBase {
+public:
+    TimPWM(TIM_TypeDef *Instance, TIM_HandleTypeDef *htim);
+    ~TimPWM(void);
 
-#endif /* INC_TIM_HAL_H_ */
+    HAL_StatusTypeDef start(void) override;
+    HAL_StatusTypeDef stop(void) override;
+    void reset(void) override;
+    uint32_t read(void);
+    void setSpeed(uint16_t value);
+    
+protected:
+    static class ISR<TimPWM> ISR_List;
+
+private:
+    static void PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+    
+};
+
+#endif /* INC_TIM_LIB_H_ */

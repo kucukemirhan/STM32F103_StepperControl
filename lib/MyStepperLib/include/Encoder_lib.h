@@ -14,7 +14,7 @@ public:
     virtual HAL_StatusTypeDef start(void);
     virtual HAL_StatusTypeDef stop(void);
     void reset(void);
-    virtual uint32_t read(void);
+    uint32_t read(void);
 
 protected:
     TIM_HandleTypeDef *_htim;
@@ -33,13 +33,13 @@ public:
 
     HAL_StatusTypeDef start(void) override; 
     HAL_StatusTypeDef stop(void) override;
-    uint32_t read(void) override;
+    int32_t read(void);
 
 protected:
     static class ISR<EncoderIT> ISR_List;
 
 private:
-    int32_t _overflow;
+    int32_t _overflow = -1;
     
     static void PeriodElapsedCallback(TIM_HandleTypeDef *htim);
     void checkOverflow(void);
