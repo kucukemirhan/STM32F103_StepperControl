@@ -15,6 +15,7 @@ public:
     virtual HAL_StatusTypeDef stop(void);
     virtual void reset(void);
     uint32_t read(void);
+    uint32_t getTIMclock(void);
 
 protected:
     TIM_TypeDef *_Instance;
@@ -57,7 +58,7 @@ public:
     inline void setThisARR(uint16_t arr);
     inline void setNextARR(uint16_t arr);
 
-    inline void setFrequency(uint16_t frequency);
+    void setFrequency(uint16_t frequency);
 
     inline uint32_t getCNT(void);
     void reset(void) override;

@@ -96,7 +96,10 @@ int main(void)
   enc1.start();
   int32_t enc_counter = 0;
 
-  //TimPWM pwm1(TIM2, &htim2);
+  TimPWM pwm1(TIM2, &htim2);
+  pwm1.start();
+  uint16_t speed = 1505;
+  pwm1.setFrequency(speed);
 
   tim3.start();
   /* USER CODE END 2 */
@@ -117,6 +120,10 @@ int main(void)
     if (button1.read() == GPIO_PIN_RESET) // Button is pressed
     {
       led1.write(GPIO_PIN_RESET);
+    
+      speed += 100;
+      pwm1.setFrequency(speed);
+      HAL_Delay(400);
     }
     enc_counter = enc1.read();
   }

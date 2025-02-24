@@ -55,6 +55,17 @@ void TimBase::init(void)
         return;
     }
 
+    if (_Instance == TIM2)
+    {
+        if (is_init[1])
+        {
+            return;
+        }
+        is_init[1] = true;
+        MX_TIM2_Init();
+        return;
+    }
+
     if (_Instance == TIM3)
     {
         if (is_init[2])
@@ -85,6 +96,24 @@ void TimBase::reset(void)
 uint32_t TimBase::read(void) 
 {
     return _htim->Instance->CNT;
+}
+
+uint32_t TimBase::getTIMclock(void)
+{
+    if (_Instance == TIM1)
+    {
+        return HAL_RCC_GetPCLK2Freq();
+
+    } else // TIM2, TIM3 or TIM4
+    {
+        if ((RCC->CFGR & RCC_CFGR_PPRE1) != RCC_CFGR_PPRE1_DIV1)
+        {
+             return HAL_RCC_GetPCLK1Freq() * 2;
+        } else
+        {
+            return HAL_RCC_GetPCLK1Freq(); //maybe wrong, check later
+        }
+    }
 }
 
 // Timer with interrupt
@@ -188,7 +217,7 @@ void TimPWM::setNextARR(uint16_t arr)
     _Instance->CCR1 = arr / 2;
 }
 
-void TimPWM::setFrequency(uint16_t frequency) 
+void TimPWM::setFrequency(uint16_t frequency)
 {
     if (frequency != 0)
     {
@@ -196,13 +225,13 @@ void TimPWM::setFrequency(uint16_t frequency)
 
         if (_Instance->CR1 & TIM_CR1_CEN) // if timer is running
         {
-            if (arr <= (HAL_RCC_GetPCLK1Freq() / 250 - 1))
+            if (arr <= (getTIMclock() / 250 - 1))
             {
-                this->setNextARR(HAL_RCC_GetPCLK1Freq() / frequency - 1);
+                this->setNextARR(getTIMclock() / frequency - 1);
                 return;
             }
 
-            uint16_t new_arr = HAL_RCC_GetPCLK1Freq() / frequency - 1;
+            uint16_t new_arr = getTIMclock() / frequency - 1;
             uint16_t cnt = _Instance->CNT;
             if (cnt <= new_arr)
             {
@@ -216,7 +245,7 @@ void TimPWM::setFrequency(uint16_t frequency)
             }
         } else
         {
-            this->setThisARR(HAL_RCC_GetPCLK1Freq() / frequency - 1);
+            this->setThisARR(getTIMclock() / frequency - 1);
         }
     } else
     {
