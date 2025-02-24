@@ -85,9 +85,6 @@ int main(void)
   
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_TIM3_Init();
-  MX_TIM2_Init();
-  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   DigitalOut led1(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
   DigitalIn button1(SW1_GPIO_Port, SW1_Pin);
@@ -98,6 +95,8 @@ int main(void)
   EncoderIT enc1(&htim1);
   enc1.start();
   int32_t enc_counter = 0;
+
+  //TimPWM pwm1(TIM2, &htim2);
 
   tim3.start();
   /* USER CODE END 2 */

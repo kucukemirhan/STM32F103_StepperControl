@@ -3,6 +3,7 @@
 
 bool TimBase::is_init[] = {false};
 ISR<TimIT> TimIT::ISR_List;
+ISR<TimPWM> TimPWM::ISR_List;
 
 void TimIT::PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -134,12 +135,24 @@ bool TimIT::delay_ms(uint64_t start_time, uint64_t delay_time)
 }
 
 // PWM timer
-TimPWM::TimPWM(TIM_TypeDef *Instance, TIM_HandleTypeDef *htim): TimBase(Instance, htim) 
+TimPWM::TimPWM(TIM_TypeDef *Instance, TIM_HandleTypeDef *htim, uint32_t Channel): 
+TimBase(Instance, htim), _Channel(TIM_CHANNEL_1)
 {
 #if USE_HAL_TIM_REGISTER_CALLBACKS != 1
 #error "USE_HAL_TIM_REGISTER_CALLBACKS must be enabled in stm32f1xx_hal_conf.h"
 #endif
 
+    if (!(_Instance->CR1 & TIM_CR1_ARPE)) 
+    {      
+        _Instance->CR1 |= TIM_CR1_ARPE;  // enable ARR preloading     
+        // _Instance->EGR |= TIM_EGR_UG;    // trigger update
+    }
+
+    if (!(_Instance->CCMR1 & TIM_CCMR1_OC1PE)) // if CCR1 preload is not enabled
+    {
+        _Instance->CCMR1 |= TIM_CCMR1_OC1PE;  // Enable CCR1 preload
+    }
+    
     htim->PeriodElapsedCallback = PeriodElapsedCallback;
     ISR_List.add(this);
 }
@@ -151,12 +164,64 @@ TimPWM::~TimPWM(void)
 
 HAL_StatusTypeDef TimPWM::start(void) 
 {
-    return HAL_TIM_PWM_Start_IT(_htim, TIM_CHANNEL_ALL);
+    return HAL_TIM_PWM_Start_IT(_htim, _Channel);
 }
 
 HAL_StatusTypeDef TimPWM::stop(void) 
 {
-    return HAL_TIM_PWM_Stop_IT(_htim, TIM_CHANNEL_ALL);
+    return HAL_TIM_PWM_Stop_IT(_htim, _Channel);
+}
+
+void TimPWM::setThisARR(uint16_t arr) 
+{
+    _Instance->CR1 &= ~TIM_CR1_CEN; // disable tim
+    _Instance->SR &= ~TIM_SR_UIF; // clear update interrupt flag
+    _Instance->ARR = arr;
+    _Instance->CCR1 = arr / 2;
+    _Instance->DIER |= TIM_DIER_UIE; // enable update interrupt
+    _Instance->CR1 |= TIM_CR1_CEN; // enable tim
+}
+
+void TimPWM::setNextARR(uint16_t arr) 
+{
+    _Instance->ARR = arr;
+    _Instance->CCR1 = arr / 2;
+}
+
+void TimPWM::setFrequency(uint16_t frequency) 
+{
+    if (frequency != 0)
+    {
+        uint16_t arr = _Instance->ARR;
+
+        if (_Instance->CR1 & TIM_CR1_CEN) // if timer is running
+        {
+            if (arr <= (HAL_RCC_GetPCLK1Freq() / 250 - 1))
+            {
+                this->setNextARR(HAL_RCC_GetPCLK1Freq() / frequency - 1);
+                return;
+            }
+
+            uint16_t new_arr = HAL_RCC_GetPCLK1Freq() / frequency - 1;
+            uint16_t cnt = _Instance->CNT;
+            if (cnt <= new_arr)
+            {
+                this->setThisARR(new_arr - cnt);
+                this->setNextARR(new_arr);
+            } else
+            {
+                this->setThisARR(new_arr);
+                this->PeriodElapsedCallback(_htim); // alttaki de olabilir tam emin değilim henüz
+                //_Instance->EGR |= TIM_EGR_UG; // trigger update
+            }
+        } else
+        {
+            this->setThisARR(HAL_RCC_GetPCLK1Freq() / frequency - 1);
+        }
+    } else
+    {
+        this->stop();
+    }
 }
 
 void TimPWM::reset(void) 
@@ -164,15 +229,18 @@ void TimPWM::reset(void)
     _htim->Instance->CNT = 0;
 }
 
-uint32_t TimPWM::read(void) 
+uint32_t TimPWM::getCNT(void) 
 {
     return _htim->Instance->CNT;
 }
 
-void TimPWM::setSpeed(uint16_t value) 
-{
-    _htim->Instance->ARR = value;
-    _htim->Instance->PSC = 0;
-    _htim->Instance->CCR1 = value/2;
-}
+// void TimPWM::setPSC(uint16_t prescaler) 
+// {   
+//     if (_old_psc == prescaler)
+//     {
+//         return;
+//     }
+//     _htim->Instance->PSC = prescaler;
+//     _htim->Instance->EGR = TIM_EGR_UG; // generate update event
 
+// }

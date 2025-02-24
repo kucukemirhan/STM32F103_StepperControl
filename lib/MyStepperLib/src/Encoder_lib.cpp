@@ -26,20 +26,43 @@ EncoderBase::~EncoderBase(void)
     if (_htim->Instance == TIM2)
     {
         is_init[1] = false;
-        HAL_TIM_Base_MspDeInit(_htim);
+        HAL_TIM_Base_DeInit(_htim);
     } 
 }
 
 void EncoderBase::init(void) 
 {
-    if (_htim->Instance == TIM2)
+    if (_htim == &htim1)
+    {
+        if (is_init[0])
+        {
+            return;
+        }
+        is_init[0] = true;
+        MX_TIM1_Init();
+        _htim->Instance->SR &= ~TIM_SR_UIF; // clear update interrupt flag
+        return;
+    }
+    
+    if (_htim == &htim2)
     {
         if (is_init[1])
         {
             return;
         }
-        is_init[0] = true;
-        void MX_TIM2_Init(void);
+        is_init[1] = true;
+        MX_TIM2_Init();
+        return;
+    }
+
+    if (_htim == &htim3)
+    {
+        if (is_init[2])
+        {
+            return;
+        }
+        is_init[2] = true;
+        MX_TIM3_Init();
         return;
     }
 }

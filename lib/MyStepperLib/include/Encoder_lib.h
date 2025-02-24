@@ -39,7 +39,7 @@ protected:
     static class ISR<EncoderIT> ISR_List;
 
 private:
-    int32_t _overflow = -1;
+    int32_t _overflow = 0;
     
     static void PeriodElapsedCallback(TIM_HandleTypeDef *htim);
     void checkOverflow(void);

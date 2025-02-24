@@ -49,17 +49,23 @@ private:
 
 class TimPWM : public TimBase {
 public:
-    TimPWM(TIM_TypeDef *Instance, TIM_HandleTypeDef *htim);
+    TimPWM(TIM_TypeDef *Instance, TIM_HandleTypeDef *htim, uint32_t Channel = TIM_CHANNEL_1);
     ~TimPWM(void);
 
     HAL_StatusTypeDef start(void) override;
     HAL_StatusTypeDef stop(void) override;
+    inline void setThisARR(uint16_t arr);
+    inline void setNextARR(uint16_t arr);
+
+    inline void setFrequency(uint16_t frequency);
+
+    inline uint32_t getCNT(void);
     void reset(void) override;
-    uint32_t read(void);
-    void setSpeed(uint16_t value);
+    // void setPSC(uint16_t prescaler);
     
 protected:
     static class ISR<TimPWM> ISR_List;
+    uint32_t _Channel;
 
 private:
     static void PeriodElapsedCallback(TIM_HandleTypeDef *htim);
