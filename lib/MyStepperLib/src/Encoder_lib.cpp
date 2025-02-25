@@ -9,7 +9,7 @@ void EncoderIT::PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
         if (ISR_List.get(i)->_htim == htim)
         {
-            ISR_List.get(i)->checkOverflow();
+            ISR_List.get(i)->handleOverflow();
         }
     }
 }
@@ -95,6 +95,7 @@ EncoderBase(htim, _Channel)
 #error "USE_HAL_TIM_REGISTER_CALLBACKS must be enabled in stm32f1xx_hal_conf.h"
 #endif
 
+    _lastCounter = __HAL_TIM_GET_COUNTER(_htim);
     htim->PeriodElapsedCallback = PeriodElapsedCallback;
     ISR_List.add(this);
 }
@@ -128,21 +129,25 @@ int32_t EncoderIT::read(void)
     // Read the raw 16-bit hardware counter
     uint16_t rawCount = __HAL_TIM_GET_COUNTER(_htim);
 
-    // Combine with the overflow (shift by 16 bits)
-    int32_t fullCount = (_overflow << 16) | rawCount;
+    // Combine with the overflow (multiply with 2^16)
+    int32_t fullCount = (_overflow << 16) + rawCount;
+    if (_overflow < 0) {
+        fullCount = ((_overflow + 1) << 16) - rawCount;
+    } // Adjusts for negative overflows
     
     return fullCount;
 }
 
-void EncoderIT::checkOverflow(void)
+void EncoderIT::handleOverflow(void)
 {
-    // Check direction bit to see if it was an overflow or underflow
-    if (__HAL_TIM_IS_TIM_COUNTING_DOWN(_htim))
+    int32_t currentCounter = __HAL_TIM_GET_COUNTER(_htim);
+    if ((currentCounter - _lastCounter) >= 0)
+    {
+        _overflow++;
+    } else
     {
         _overflow--;
     }
-    else
-    {
-        _overflow++;
-    }
+
+    _lastCounter = currentCounter;
 }

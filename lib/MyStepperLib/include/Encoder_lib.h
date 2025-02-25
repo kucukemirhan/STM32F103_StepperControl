@@ -40,8 +40,9 @@ protected:
 
 private:
     int32_t _overflow = 0;
+    uint16_t _lastCounter;
     
     static void PeriodElapsedCallback(TIM_HandleTypeDef *htim);
-    void checkOverflow(void);
+    void handleOverflow(void);
 };
 #endif /* INC_ENCODER_LIB_H_ */
