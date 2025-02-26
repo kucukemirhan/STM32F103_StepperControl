@@ -95,7 +95,6 @@ EncoderBase(htim, _Channel)
 #error "USE_HAL_TIM_REGISTER_CALLBACKS must be enabled in stm32f1xx_hal_conf.h"
 #endif
 
-    _lastCounter = __HAL_TIM_GET_COUNTER(_htim);
     htim->PeriodElapsedCallback = PeriodElapsedCallback;
     ISR_List.add(this);
 }
@@ -127,7 +126,7 @@ HAL_StatusTypeDef EncoderIT::stop(void)
 int32_t EncoderIT::read(void) 
 {
     // Read the raw 16-bit hardware counter
-    uint16_t rawCount = __HAL_TIM_GET_COUNTER(_htim);
+    rawCount = __HAL_TIM_GET_COUNTER(_htim);
 
     // Combine with the overflow (multiply with 2^16)
     int32_t fullCount = (_overflow << 16) + rawCount;
@@ -141,13 +140,13 @@ int32_t EncoderIT::read(void)
 void EncoderIT::handleOverflow(void)
 {
     int32_t currentCounter = __HAL_TIM_GET_COUNTER(_htim);
-    if ((currentCounter - _lastCounter) >= 0)
-    {
-        _overflow++;
-    } else
+    if ((currentCounter - rawCount) > 32767)
     {
         _overflow--;
+    } 
+    else if (currentCounter - rawCount < -32768)
+    {
+        _overflow++;
     }
-
-    _lastCounter = currentCounter;
+    rawCount = currentCounter; // to prevent multiple overflow counts
 }

@@ -40,7 +40,7 @@ protected:
 
 private:
     int32_t _overflow = 0;
-    uint16_t _lastCounter;
+    uint16_t rawCount = 0;
     
     static void PeriodElapsedCallback(TIM_HandleTypeDef *htim);
     void handleOverflow(void);
