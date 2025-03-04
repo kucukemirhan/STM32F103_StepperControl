@@ -18,7 +18,13 @@ void TimIT::PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void TimPWM::PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-
+    for (uint16_t i = 0; i < ISR_List.size(); i++)
+    {
+        if (ISR_List.get(i)->_htim == htim)
+        {
+            ISR_List.get(i)->setPSC(1);
+        }
+    }
 }
 
 // Timer base implementation
@@ -217,6 +223,11 @@ void TimPWM::setNextARR(uint16_t arr)
     _Instance->CCR1 = arr / 2;
 }
 
+void TimPWM::setPSC(uint16_t psc)
+{
+    _Instance->PSC = psc;
+}
+
 void TimPWM::setFrequency(uint16_t frequency)
 {
     if (frequency != 0)
@@ -262,14 +273,3 @@ uint32_t TimPWM::getCNT(void)
 {
     return _htim->Instance->CNT;
 }
-
-// void TimPWM::setPSC(uint16_t prescaler) 
-// {   
-//     if (_old_psc == prescaler)
-//     {
-//         return;
-//     }
-//     _htim->Instance->PSC = prescaler;
-//     _htim->Instance->EGR = TIM_EGR_UG; // generate update event
-
-// }

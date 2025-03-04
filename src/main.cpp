@@ -125,7 +125,8 @@ int main(void)
       pwm1.setFrequency(speed);
       HAL_Delay(400);
     }
-    enc_counter = enc1.read();
+    pwm1.setPSC(1);
+    // enc_counter = enc1.read();
   }
   /* USER CODE END 3 */
 }

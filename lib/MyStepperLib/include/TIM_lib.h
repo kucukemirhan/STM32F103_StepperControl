@@ -57,9 +57,10 @@ public:
     HAL_StatusTypeDef stop(void) override;
     inline void setThisARR(uint16_t arr);
     inline void setNextARR(uint16_t arr);
-
+    void setPSC(uint16_t psc);
+    
     void setFrequency(uint16_t frequency);
-
+    
     inline uint32_t getCNT(void);
     void reset(void) override;
     // void setPSC(uint16_t prescaler);
