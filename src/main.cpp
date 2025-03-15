@@ -85,21 +85,28 @@ int main(void)
   
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  // MX_CAN_Init();
   /* USER CODE BEGIN 2 */
   DigitalOut led1(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
   DigitalIn button1(SW1_GPIO_Port, SW1_Pin);
-  
+
   TimIT tim3(TIM3, &htim3);
   uint64_t tick_ms_previous = 0;
 
+  DigitalOut dir1(DIR1_GPIO_Port, DIR1_Pin, GPIO_PIN_SET);
+  
   EncoderIT enc1(&htim1);
   enc1.start();
   int32_t enc_counter = 0;
 
   TimPWM pwm1(TIM2, &htim2);
   pwm1.start();
-  uint16_t speed = 1505;
-  pwm1.setFrequency(speed);
+  // uint16_t speed = 1505;
+  // pwm1.setFrequency(speed);
+
+  StepperMotor motor1(enc1, pwm1, dir1);
+  motor1.setSpeed(1500);
+  motor1.setTargetPosition(3000);
 
   tim3.start();
   /* USER CODE END 2 */
@@ -121,12 +128,14 @@ int main(void)
     {
       led1.write(GPIO_PIN_RESET);
     
-      speed += 100;
-      pwm1.setFrequency(speed);
+      //speed += 100;
+      //pwm1.setFrequency(speed);
       HAL_Delay(400);
     }
-    pwm1.setPSC(1);
     // enc_counter = enc1.read();
+
+    motor1.update();
+    HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }

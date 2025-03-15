@@ -117,7 +117,6 @@ HAL_StatusTypeDef EncoderIT::start(void)
     }
 }
 
-
 HAL_StatusTypeDef EncoderIT::stop(void) 
 {
     return HAL_TIM_Encoder_Stop_IT(_htim, _Channel);
@@ -131,7 +130,7 @@ int32_t EncoderIT::read(void)
     // Combine with the overflow (multiply with 2^16)
     int32_t fullCount = (_overflow << 16) + rawCount;
     if (_overflow < 0) {
-        fullCount = ((_overflow + 1) << 16) - rawCount;
+        fullCount = ((_overflow) << 16) | rawCount;
     } // Adjusts for negative overflows
     
     return fullCount;

@@ -63,6 +63,8 @@ void Error_Handler(void);
 #define PWM1_GPIO_Port GPIOA
 #define SW1_Pin GPIO_PIN_10
 #define SW1_GPIO_Port GPIOB
+#define DIR1_Pin GPIO_PIN_11
+#define DIR1_GPIO_Port GPIOB
 #define ENC_CH_A_Pin GPIO_PIN_8
 #define ENC_CH_A_GPIO_Port GPIOA
 #define ENC_CH_B_Pin GPIO_PIN_9

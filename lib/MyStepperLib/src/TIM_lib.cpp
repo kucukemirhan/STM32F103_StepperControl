@@ -22,7 +22,7 @@ void TimPWM::PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
         if (ISR_List.get(i)->_htim == htim)
         {
-            ISR_List.get(i)->setPSC(1);
+            ISR_List.get(i)->setPSC(0);
         }
     }
 }
@@ -187,6 +187,8 @@ TimBase(Instance, htim), _Channel(TIM_CHANNEL_1)
     {
         _Instance->CCMR1 |= TIM_CCMR1_OC1PE;  // Enable CCR1 preload
     }
+
+    __HAL_TIM_ENABLE_IT(htim, TIM_IT_UPDATE);
     
     htim->PeriodElapsedCallback = PeriodElapsedCallback;
     ISR_List.add(this);
@@ -253,6 +255,7 @@ void TimPWM::setFrequency(uint16_t frequency)
                 this->setThisARR(new_arr);
                 this->PeriodElapsedCallback(_htim); // alttaki de olabilir tam emin değilim henüz
                 //_Instance->EGR |= TIM_EGR_UG; // trigger update
+                // buradaki işlemi yapmamız gerekiyor mu?
             }
         } else
         {
